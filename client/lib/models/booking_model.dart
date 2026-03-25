@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-
+import 'package:flutter/material.dart' show Color;
 part 'booking_model.g.dart';
 
 @HiveType(typeId: 3)
@@ -88,32 +88,31 @@ class BookingModel extends HiveObject {
       bookingDate: json['bookingDate'] != null
           ? DateTime.parse(json['bookingDate'])
           : DateTime.now(),
-      eventDate: json['eventDate'] != null
-          ? DateTime.parse(json['eventDate'])
-          : null,
+      eventDate:
+          json['eventDate'] != null ? DateTime.parse(json['eventDate']) : null,
       notes: json['notes'],
       packageName: json['packageName'] ?? 'My Package',
     );
   }
 
   Map<String, dynamic> toJson() => {
-    '_id': id,
-    'userId': userId,
-    'serviceId': serviceId,
-    'serviceName': serviceName,
-    'selectedAddonIds': selectedAddonIds,
-    'selectedAddonNames': selectedAddonNames,
-    'durationHours': durationHours,
-    'basePrice': basePrice,
-    'addonsTotal': addonsTotal,
-    'discountAmount': discountAmount,
-    'totalPrice': totalPrice,
-    'status': status,
-    'bookingDate': bookingDate.toIso8601String(),
-    'eventDate': eventDate?.toIso8601String(),
-    'notes': notes,
-    'packageName': packageName,
-  };
+        '_id': id,
+        'userId': userId,
+        'serviceId': serviceId,
+        'serviceName': serviceName,
+        'selectedAddonIds': selectedAddonIds,
+        'selectedAddonNames': selectedAddonNames,
+        'durationHours': durationHours,
+        'basePrice': basePrice,
+        'addonsTotal': addonsTotal,
+        'discountAmount': discountAmount,
+        'totalPrice': totalPrice,
+        'status': status,
+        'bookingDate': bookingDate.toIso8601String(),
+        'eventDate': eventDate?.toIso8601String(),
+        'notes': notes,
+        'packageName': packageName,
+      };
 
   Color get statusColor {
     switch (status) {
@@ -129,10 +128,4 @@ class BookingModel extends HiveObject {
   }
 
   bool get canCancel => status == 'pending' || status == 'confirmed';
-}
-
-// ignore: avoid_classes_with_only_static_members
-class Color {
-  final int value;
-  const Color(this.value);
 }

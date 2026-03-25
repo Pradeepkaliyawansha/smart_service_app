@@ -132,7 +132,8 @@ class _BookingCard extends StatelessWidget {
       'cancelled': AppTheme.error,
       'completed': const Color(0xFF4A9EFF),
     };
-    final statusColor = statusColors[booking.status] ?? AppTheme.textMuted;
+    final Color statusColor =
+        statusColors[booking.status] ?? AppTheme.textMuted;
 
     return Container(
       padding: const EdgeInsets.all(18),
