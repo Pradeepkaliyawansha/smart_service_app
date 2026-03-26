@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../config/app_config.dart';
 import '../models/service_model.dart';
+import '../models/addon_model.dart';
+import '../models/booking_model.dart';
+import '../models/user_model.dart';
 import '../models/price_calculation_model.dart';
 
 class CacheService {
@@ -10,6 +13,21 @@ class CacheService {
 
   static Future<void> init() async {
     await Hive.initFlutter();
+
+    // Register all type adapters BEFORE opening boxes
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(UserModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(ServiceModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(2)) {
+      Hive.registerAdapter(AddonModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(BookingModelAdapter());
+    }
+
     _servicesBox = await Hive.openBox(AppConfig.servicesBox);
     _generalBox = await Hive.openBox('general');
   }
@@ -23,6 +41,7 @@ class CacheService {
       'services',
       jsonEncode(services.map((s) => s.toJson()).toList()),
     );
+    // FIX: store cached_at in the same box as the data
     await box.put('services_cached_at', DateTime.now().toIso8601String());
   }
 
@@ -41,16 +60,22 @@ class CacheService {
     }
   }
 
+  /// FIX: was checking wrong box (_generalBox instead of _servicesBox for services)
   static bool isCacheValid(
     String key, {
     Duration maxAge = const Duration(minutes: 30),
   }) {
-    final box = _generalBox;
+    // For 'services' key, check _servicesBox; everything else checks _generalBox
+    final box = key == 'services' ? _servicesBox : _generalBox;
     if (box == null) return false;
     final cachedAt = box.get('${key}_cached_at');
     if (cachedAt == null) return false;
-    final age = DateTime.now().difference(DateTime.parse(cachedAt as String));
-    return age < maxAge;
+    try {
+      final age = DateTime.now().difference(DateTime.parse(cachedAt as String));
+      return age < maxAge;
+    } catch (_) {
+      return false;
+    }
   }
 
   // ─── SAVED PACKAGES ───────────────────────────────────────────────────────
@@ -58,9 +83,9 @@ class CacheService {
   static Future<void> savePackage(SavedPackage pkg) async {
     final box = _generalBox;
     if (box == null) return;
+    final rawStr = box.get('saved_packages') as String?;
     final List<dynamic> existing =
-        jsonDecode((box.get('saved_packages') as String?) ?? '[]')
-            as List<dynamic>;
+        rawStr != null ? jsonDecode(rawStr) as List<dynamic> : [];
     existing.insert(0, pkg.toJson());
     await box.put('saved_packages', jsonEncode(existing));
   }

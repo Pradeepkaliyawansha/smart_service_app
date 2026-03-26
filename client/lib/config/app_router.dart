@@ -28,17 +28,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
       final isAdmin = authState.isAdmin;
-      final isAuthRoute = state.matchedLocation.startsWith('/auth');
-      final isSplash = state.matchedLocation == '/splash';
+      final path = state.matchedLocation;
+      final isAuthRoute = path.startsWith('/auth');
+      final isSplash = path == '/splash';
 
       if (isSplash) return null;
       if (!isAuthenticated && !isAuthRoute) return '/auth/login';
       if (isAuthenticated && isAuthRoute) {
         return isAdmin ? '/admin' : '/home';
       }
-      if (isAuthenticated &&
-          isAdmin &&
-          state.matchedLocation.startsWith('/home')) {
+      // Prevent customers from hitting admin routes and vice versa
+      if (isAuthenticated && isAdmin && path.startsWith('/home')) {
+        return '/admin';
+      }
+      if (isAuthenticated && isAdmin && path.startsWith('/services')) {
         return '/admin';
       }
       return null;
@@ -127,26 +130,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// Customer shell with bottom navigation
+// ─── Customer shell ────────────────────────────────────────────────────────
+
 class CustomerShell extends StatelessWidget {
   final Widget child;
   const CustomerShell({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: child, bottomNavigationBar: _CustomerBottomNav());
+    return Scaffold(
+      body: child,
+      // FIX: Use Builder so GoRouterState.of() gets a context with the router
+      bottomNavigationBar: Builder(
+        builder: (ctx) => _CustomerBottomNav(
+          currentLocation: GoRouterState.of(ctx).matchedLocation,
+        ),
+      ),
+    );
   }
 }
 
 class _CustomerBottomNav extends StatelessWidget {
+  final String currentLocation;
+  const _CustomerBottomNav({required this.currentLocation});
+
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
     int currentIndex = 0;
-    if (location == '/home') currentIndex = 0;
-    if (location == '/services') currentIndex = 1;
-    if (location == '/my-bookings') currentIndex = 2;
-    if (location == '/saved') currentIndex = 3;
+    if (currentLocation == '/home') currentIndex = 0;
+    if (currentLocation == '/services') currentIndex = 1;
+    if (currentLocation == '/my-bookings') currentIndex = 2;
+    if (currentLocation == '/saved') currentIndex = 3;
 
     return Container(
       decoration: const BoxDecoration(
@@ -193,26 +207,37 @@ class _CustomerBottomNav extends StatelessWidget {
   }
 }
 
-// Admin shell with bottom navigation
+// ─── Admin shell ───────────────────────────────────────────────────────────
+
 class AdminShell extends StatelessWidget {
   final Widget child;
   const AdminShell({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: child, bottomNavigationBar: _AdminBottomNav());
+    return Scaffold(
+      body: child,
+      // FIX: Same Builder pattern for admin
+      bottomNavigationBar: Builder(
+        builder: (ctx) => _AdminBottomNav(
+          currentLocation: GoRouterState.of(ctx).matchedLocation,
+        ),
+      ),
+    );
   }
 }
 
 class _AdminBottomNav extends StatelessWidget {
+  final String currentLocation;
+  const _AdminBottomNav({required this.currentLocation});
+
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
     int currentIndex = 0;
-    if (location == '/admin') currentIndex = 0;
-    if (location == '/admin/services') currentIndex = 1;
-    if (location == '/admin/bookings') currentIndex = 2;
-    if (location == '/admin/analytics') currentIndex = 3;
+    if (currentLocation == '/admin') currentIndex = 0;
+    if (currentLocation == '/admin/services') currentIndex = 1;
+    if (currentLocation == '/admin/bookings') currentIndex = 2;
+    if (currentLocation == '/admin/analytics') currentIndex = 3;
 
     return Container(
       decoration: const BoxDecoration(

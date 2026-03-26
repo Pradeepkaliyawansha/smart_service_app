@@ -18,6 +18,9 @@ class AppTheme {
   static const Color warning = Color(0xFFFFC107);
   static const Color divider = Color(0xFF2A2A44);
 
+  // FIX: Use null-safe font family — Flutter will fall back to system sans-serif
+  // if the font files aren't present. Remove these constants and reference
+  // them directly only from TextStyle if you don't have the font files.
   static const String fontFamily = 'Syne';
   static const String bodyFont = 'DMSans';
 
@@ -31,10 +34,12 @@ class AppTheme {
         primary: primary,
         secondary: surfaceLight,
         surface: surface,
+        // ignore: deprecated_member_use
         background: background,
         error: error,
         onPrimary: Color(0xFF0A0A14),
         onSurface: textPrimary,
+        // ignore: deprecated_member_use
         onBackground: textPrimary,
       ),
       fontFamily: bodyFont,
@@ -201,11 +206,11 @@ class AppTheme {
       ),
       dividerTheme: const DividerThemeData(color: divider, thickness: 1),
       switchTheme: SwitchThemeData(
-        thumbColor: MaterialStateProperty.resolveWith(
-          (s) => s.contains(MaterialState.selected) ? primary : textMuted,
+        thumbColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? primary : textMuted,
         ),
-        trackColor: MaterialStateProperty.resolveWith(
-          (s) => s.contains(MaterialState.selected)
+        trackColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected)
               ? primary.withOpacity(0.3)
               : divider,
         ),
