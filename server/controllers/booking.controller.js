@@ -53,6 +53,9 @@ const getMyBookings = async (req, res) => {
 };
 
 // GET /api/bookings  (admin: all bookings)
+// FIX: Do NOT populate userId — return the raw ObjectId string so Flutter
+// BookingModel.fromJson can parse it as a plain string.
+// If you need user info, add a separate "userInfo" field instead.
 const getAllBookings = async (req, res) => {
   try {
     const { status, serviceId } = req.query;
@@ -60,11 +63,18 @@ const getAllBookings = async (req, res) => {
     if (status) filter.status = status;
     if (serviceId) filter.serviceId = serviceId;
 
-    const bookings = await Booking.find(filter)
-      .populate("userId", "name email")
-      .sort({ createdAt: -1 });
+    const bookings = await Booking.find(filter).sort({ createdAt: -1 }).lean(); // lean() returns plain JS objects — faster + no Mongoose overhead
 
-    res.json({ bookings });
+    // Convert ObjectId fields to strings so Flutter can parse them
+    const serialized = bookings.map((b) => ({
+      ...b,
+      _id: b._id.toString(),
+      userId: b.userId ? b.userId.toString() : "",
+      serviceId: b.serviceId ? b.serviceId.toString() : "",
+      selectedAddonIds: (b.selectedAddonIds || []).map((id) => id.toString()),
+    }));
+
+    res.json({ bookings: serialized });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -73,21 +83,29 @@ const getAllBookings = async (req, res) => {
 // GET /api/bookings/:id
 const getBooking = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id).populate(
-      "userId",
-      "name email",
-    );
+    const booking = await Booking.findById(req.params.id).lean();
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
     // Only admin or the booking owner can view
+    const bookingUserId = booking.userId ? booking.userId.toString() : "";
     if (
       req.user.role !== "admin" &&
-      booking.userId._id.toString() !== req.user._id.toString()
+      bookingUserId !== req.user._id.toString()
     ) {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    res.json({ booking });
+    const serialized = {
+      ...booking,
+      _id: booking._id.toString(),
+      userId: bookingUserId,
+      serviceId: booking.serviceId ? booking.serviceId.toString() : "",
+      selectedAddonIds: (booking.selectedAddonIds || []).map((id) =>
+        id.toString(),
+      ),
+    };
+
+    res.json({ booking: serialized });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -106,10 +124,20 @@ const updateBookingStatus = async (req, res) => {
       req.params.id,
       { status },
       { new: true },
-    );
+    ).lean();
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    res.json({ booking });
+    const serialized = {
+      ...booking,
+      _id: booking._id.toString(),
+      userId: booking.userId ? booking.userId.toString() : "",
+      serviceId: booking.serviceId ? booking.serviceId.toString() : "",
+      selectedAddonIds: (booking.selectedAddonIds || []).map((id) =>
+        id.toString(),
+      ),
+    };
+
+    res.json({ booking: serialized });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -5,7 +5,6 @@ import 'package:animate_do/animate_do.dart';
 import '../../config/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/services_provider.dart';
-import '../../models/service_model.dart';
 import '../../widgets/service_card.dart';
 import '../../widgets/shimmer_loader.dart';
 

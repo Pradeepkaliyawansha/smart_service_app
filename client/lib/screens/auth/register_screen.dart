@@ -33,9 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
-    final success = await ref
-        .read(authProvider.notifier)
-        .register(
+    final success = await ref.read(authProvider.notifier).register(
           name: _nameCtrl.text.trim(),
           email: _emailCtrl.text.trim(),
           password: _passwordCtrl.text,
@@ -100,7 +98,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-
                 if (auth.error != null)
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -121,7 +118,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                     ),
                   ),
-
                 AppTextField(
                   controller: _nameCtrl,
                   label: 'Full name',
@@ -171,8 +167,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   obscureText: true,
                   prefixIcon: Icons.lock_outlined,
                   validator: (v) {
-                    if (v != _passwordCtrl.text)
+                    if (v != _passwordCtrl.text) {
                       return 'Passwords do not match';
+                    }
                     return null;
                   },
                 ),

@@ -47,7 +47,7 @@ class AdminAnalyticsScreen extends ConsumerWidget {
                   ),
                 ),
                 data: (list) => _AnalyticsContent(
-                  bookings: list,
+                  bookings: list.cast<BookingModel>(),
                   serviceCount: services.length,
                 ),
               ),
@@ -73,12 +73,10 @@ class _AnalyticsContent extends StatelessWidget {
       (s, b) => s + b.discountAmount,
     );
     final pendingCount = bookings.where((b) => b.status == 'pending').length;
-    final confirmedCount = bookings
-        .where((b) => b.status == 'confirmed')
-        .length;
-    final completedCount = bookings
-        .where((b) => b.status == 'completed')
-        .length;
+    final confirmedCount =
+        bookings.where((b) => b.status == 'confirmed').length;
+    final completedCount =
+        bookings.where((b) => b.status == 'completed').length;
 
     // Revenue by service
     final Map<String, double> revenueByService = {};
@@ -146,7 +144,7 @@ class _AnalyticsContent extends StatelessWidget {
           // ─── Booking Status Pie Chart ──────────────────────────────────────
           FadeInUp(
             delay: const Duration(milliseconds: 150),
-            child: _SectionTitle('Booking Status'),
+            child: const _SectionTitle('Booking Status'),
           ),
           const SizedBox(height: 12),
           FadeInUp(
@@ -259,7 +257,7 @@ class _AnalyticsContent extends StatelessWidget {
           if (revenueByService.isNotEmpty) ...[
             FadeInUp(
               delay: const Duration(milliseconds: 250),
-              child: _SectionTitle('Revenue by Service'),
+              child: const _SectionTitle('Revenue by Service'),
             ),
             const SizedBox(height: 12),
             FadeInUp(
@@ -333,7 +331,7 @@ class _AnalyticsContent extends StatelessWidget {
           // ─── Top Add-ons ───────────────────────────────────────────────────
           FadeInUp(
             delay: const Duration(milliseconds: 330),
-            child: _SectionTitle('Most Chosen Add-ons'),
+            child: const _SectionTitle('Most Chosen Add-ons'),
           ),
           const SizedBox(height: 12),
           FadeInUp(

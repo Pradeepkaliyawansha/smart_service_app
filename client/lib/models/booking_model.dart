@@ -72,12 +72,36 @@ class BookingModel extends HiveObject {
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
+    // FIX: userId may come back as a populated object {_id, name, email}
+    // when the server uses .populate('userId'), OR as a plain string.
+    // Handle both cases gracefully.
+    String parseUserId(dynamic raw) {
+      if (raw == null) return '';
+      if (raw is String) return raw;
+      if (raw is Map) {
+        return (raw['_id'] ?? raw['id'] ?? '').toString();
+      }
+      return raw.toString();
+    }
+
+    // FIX: serviceId may also be a populated object in some responses
+    String parseId(dynamic raw) {
+      if (raw == null) return '';
+      if (raw is String) return raw;
+      if (raw is Map) {
+        return (raw['_id'] ?? raw['id'] ?? '').toString();
+      }
+      return raw.toString();
+    }
+
     return BookingModel(
-      id: json['_id'] ?? json['id'] ?? '',
-      userId: json['userId'] ?? '',
-      serviceId: json['serviceId'] ?? '',
+      id: parseId(json['_id'] ?? json['id']),
+      userId: parseUserId(json['userId']),
+      serviceId: parseId(json['serviceId']),
       serviceName: json['serviceName'] ?? '',
-      selectedAddonIds: List<String>.from(json['selectedAddonIds'] ?? []),
+      selectedAddonIds: List<String>.from(
+        (json['selectedAddonIds'] ?? []).map((e) => e.toString()),
+      ),
       selectedAddonNames: List<String>.from(json['selectedAddonNames'] ?? []),
       durationHours: json['durationHours'] ?? 1,
       basePrice: (json['basePrice'] ?? 0).toDouble(),
@@ -87,7 +111,9 @@ class BookingModel extends HiveObject {
       status: json['status'] ?? 'pending',
       bookingDate: json['bookingDate'] != null
           ? DateTime.parse(json['bookingDate'])
-          : DateTime.now(),
+          : json['createdAt'] != null
+              ? DateTime.parse(json['createdAt'])
+              : DateTime.now(),
       eventDate:
           json['eventDate'] != null ? DateTime.parse(json['eventDate']) : null,
       notes: json['notes'],

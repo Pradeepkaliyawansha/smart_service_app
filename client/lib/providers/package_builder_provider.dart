@@ -118,11 +118,9 @@ class PackageBuilderNotifier extends StateNotifier<PackageBuilderState> {
   }
 }
 
-final packageBuilderProvider =
-    StateNotifierProvider.autoDispose<
-      PackageBuilderNotifier,
-      PackageBuilderState
-    >((ref) => PackageBuilderNotifier());
+final packageBuilderProvider = StateNotifierProvider.autoDispose<
+    PackageBuilderNotifier,
+    PackageBuilderState>((ref) => PackageBuilderNotifier());
 
 // ─── Bookings provider ────────────────────────────────────────────────────────
 
@@ -158,8 +156,8 @@ class BookingsNotifier extends StateNotifier<BookingsState> {
 
 final bookingSubmitProvider =
     StateNotifierProvider.autoDispose<BookingsNotifier, BookingsState>(
-      (ref) => BookingsNotifier(ref),
-    );
+  (ref) => BookingsNotifier(ref),
+);
 
 // ─── My bookings ──────────────────────────────────────────────────────────────
 
@@ -169,10 +167,17 @@ final myBookingsProvider = FutureProvider.autoDispose((ref) async {
 });
 
 // ─── All bookings (admin) ─────────────────────────────────────────────────────
-
-final allBookingsProvider = FutureProvider.autoDispose((ref) async {
+// FIX: Use keepAlive so the data isn't discarded on tab switch,
+// preventing unnecessary re-fetches that can mask errors.
+final allBookingsProvider = FutureProvider<List<dynamic>>((ref) async {
   final api = ref.read(apiServiceProvider);
-  return api.getAllBookings();
+  try {
+    return await api.getAllBookings();
+  } catch (e) {
+    // Re-throw with a cleaner message for the UI
+    throw Exception(
+        'Failed to load bookings: ${e.toString().replaceAll('Exception: ', '')}');
+  }
 });
 
 // ─── Saved packages ───────────────────────────────────────────────────────────
@@ -182,8 +187,13 @@ final savedPackagesProvider = Provider.autoDispose((ref) {
 });
 
 // ─── Analytics ────────────────────────────────────────────────────────────────
-
-final analyticsProvider = FutureProvider.autoDispose((ref) async {
+// FIX: Use keepAlive (non-autoDispose) so analytics data persists across tab switches
+final analyticsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final api = ref.read(apiServiceProvider);
-  return api.getAnalytics();
+  try {
+    return await api.getAnalytics();
+  } catch (e) {
+    throw Exception(
+        'Failed to load analytics: ${e.toString().replaceAll('Exception: ', '')}');
+  }
 });

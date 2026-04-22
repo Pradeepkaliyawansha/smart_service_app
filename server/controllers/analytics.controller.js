@@ -18,13 +18,17 @@ const getAnalytics = async (req, res) => {
       Service.countDocuments(),
       User.countDocuments({ role: "user" }),
       User.countDocuments({ role: "admin" }),
-      Booking.find().sort({ createdAt: -1 }),
-      Addon.find().sort({ selectCount: -1 }).limit(10),
+      // FIX: Use .lean() to get plain objects — avoids ObjectId serialization issues
+      Booking.find().sort({ createdAt: -1 }).lean(),
+      Addon.find().sort({ selectCount: -1 }).limit(10).lean(),
     ]);
 
     // Revenue totals
-    const totalRevenue = bookings.reduce((s, b) => s + b.totalPrice, 0);
-    const totalDiscounts = bookings.reduce((s, b) => s + b.discountAmount, 0);
+    const totalRevenue = bookings.reduce((s, b) => s + (b.totalPrice || 0), 0);
+    const totalDiscounts = bookings.reduce(
+      (s, b) => s + (b.discountAmount || 0),
+      0,
+    );
 
     // Status breakdown
     const statusCounts = bookings.reduce((acc, b) => {
@@ -34,7 +38,8 @@ const getAnalytics = async (req, res) => {
 
     // Revenue by service
     const revenueByService = bookings.reduce((acc, b) => {
-      acc[b.serviceName] = (acc[b.serviceName] || 0) + b.totalPrice;
+      const name = b.serviceName || "Unknown";
+      acc[name] = (acc[name] || 0) + (b.totalPrice || 0);
       return acc;
     }, {});
 
@@ -49,16 +54,22 @@ const getAnalytics = async (req, res) => {
     const bookingsByDay = last7Days.map((day) => ({
       date: day,
       count: bookings.filter(
-        (b) => b.createdAt.toISOString().split("T")[0] === day,
+        (b) =>
+          b.createdAt &&
+          new Date(b.createdAt).toISOString().split("T")[0] === day,
       ).length,
       revenue: bookings
-        .filter((b) => b.createdAt.toISOString().split("T")[0] === day)
-        .reduce((s, b) => s + b.totalPrice, 0),
+        .filter(
+          (b) =>
+            b.createdAt &&
+            new Date(b.createdAt).toISOString().split("T")[0] === day,
+        )
+        .reduce((s, b) => s + (b.totalPrice || 0), 0),
     }));
 
     // Most booked combos (by add-on combo fingerprint)
     const comboCounts = bookings.reduce((acc, b) => {
-      if (!b.selectedAddonNames.length) return acc;
+      if (!b.selectedAddonNames || !b.selectedAddonNames.length) return acc;
       const key = [...b.selectedAddonNames].sort().join(" + ");
       acc[key] = (acc[key] || 0) + 1;
       return acc;
@@ -91,6 +102,7 @@ const getAnalytics = async (req, res) => {
       topCombos,
     });
   } catch (err) {
+    console.error("Analytics error:", err);
     res.status(500).json({ message: err.message });
   }
 };

@@ -105,7 +105,7 @@ class ServiceListScreen extends ConsumerWidget {
                   final cat = _categories[i];
                   final isSelected =
                       (state.selectedCategory == null && cat == 'All') ||
-                      state.selectedCategory == cat;
+                          state.selectedCategory == cat;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: GestureDetector(
@@ -118,9 +118,8 @@ class ServiceListScreen extends ConsumerWidget {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppTheme.primary
-                              : AppTheme.cardBg,
+                          color:
+                              isSelected ? AppTheme.primary : AppTheme.cardBg,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
@@ -155,59 +154,59 @@ class ServiceListScreen extends ConsumerWidget {
                       child: ShimmerLoader(count: 4),
                     )
                   : state.filtered.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('🔍', style: TextStyle(fontSize: 48)),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'No services found',
-                            style: TextStyle(
-                              fontFamily: 'Syne',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Try a different category',
-                            style: TextStyle(
-                              fontFamily: 'DMSans',
-                              fontSize: 14,
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      color: AppTheme.primary,
-                      backgroundColor: AppTheme.cardBg,
-                      onRefresh: () =>
-                          notifier.loadServices(forceRefresh: true),
-                      child: ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                        itemCount: state.filtered.length,
-                        itemBuilder: (ctx, i) {
-                          final service = state.filtered[i];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: FadeInUp(
-                              delay: Duration(milliseconds: i * 60),
-                              child: ServiceCard(
-                                service: service,
-                                onTap: () => context.push(
-                                  '/package-builder/${service.id}',
-                                  extra: service,
+                      ? const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('🔍', style: TextStyle(fontSize: 48)),
+                              SizedBox(height: 16),
+                              Text(
+                                'No services found',
+                                style: TextStyle(
+                                  fontFamily: 'Syne',
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimary,
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Try a different category',
+                                style: TextStyle(
+                                  fontFamily: 'DMSans',
+                                  fontSize: 14,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          color: AppTheme.primary,
+                          backgroundColor: AppTheme.cardBg,
+                          onRefresh: () =>
+                              notifier.loadServices(forceRefresh: true),
+                          child: ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                            itemCount: state.filtered.length,
+                            itemBuilder: (ctx, i) {
+                              final service = state.filtered[i];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: FadeInUp(
+                                  delay: Duration(milliseconds: i * 60),
+                                  child: ServiceCard(
+                                    service: service,
+                                    onTap: () => context.push(
+                                      '/package-builder/${service.id}',
+                                      extra: service,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
             ),
           ],
         ),

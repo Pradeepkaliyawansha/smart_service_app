@@ -225,8 +225,9 @@ class _AdminAddServiceScreenState extends ConsumerState<AdminAddServiceScreen> {
                               prefixIcon: Icons.attach_money_rounded,
                               validator: (v) {
                                 if (v == null || v.isEmpty) return 'Required';
-                                if (double.tryParse(v) == null)
+                                if (double.tryParse(v) == null) {
                                   return 'Invalid';
+                                }
                                 return null;
                               },
                             ),
@@ -240,8 +241,9 @@ class _AdminAddServiceScreenState extends ConsumerState<AdminAddServiceScreen> {
                               prefixIcon: Icons.timer_outlined,
                               validator: (v) {
                                 if (v == null || v.isEmpty) return 'Required';
-                                if (double.tryParse(v) == null)
+                                if (double.tryParse(v) == null) {
                                   return 'Invalid';
+                                }
                                 return null;
                               },
                             ),

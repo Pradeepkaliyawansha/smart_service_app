@@ -15,19 +15,31 @@ const app = express();
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
+// FIX: Mobile apps (Flutter/Dio) don't send an Origin header.
+// The previous CORS config blocked requests without an origin when
+// ALLOWED_ORIGINS was set. Now we always allow origin-less requests
+// (mobile apps, Postman, curl) and only gate browser-based origins.
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
-  .map((o) => o.trim());
+  .map((o) => o.trim())
+  .filter(Boolean); // remove empty strings
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, Postman)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS blocked: ${origin}`));
+      // No origin = mobile app, Postman, curl — always allow
+      if (!origin) {
+        return callback(null, true);
       }
+      // If no allowed origins configured, allow all
+      if (allowedOrigins.length === 0) {
+        return callback(null, true);
+      }
+      // Check against allowed list
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error(`CORS blocked: ${origin}`));
     },
     credentials: true,
   }),
@@ -74,10 +86,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected");
     app.listen(PORT, "0.0.0.0", () => {

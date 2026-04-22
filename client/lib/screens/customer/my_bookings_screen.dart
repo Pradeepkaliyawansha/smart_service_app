@@ -43,9 +43,9 @@ class MyBookingsScreen extends ConsumerWidget {
                     children: [
                       const Text('⚠️', style: TextStyle(fontSize: 48)),
                       const SizedBox(height: 12),
-                      Text(
+                      const Text(
                         'Could not load bookings',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Syne',
                           fontSize: 16,
                           color: AppTheme.textPrimary,
@@ -89,13 +89,13 @@ class _EmptyBookings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('📋', style: TextStyle(fontSize: 56)),
-          const SizedBox(height: 16),
-          const Text(
+          Text('📋', style: TextStyle(fontSize: 56)),
+          SizedBox(height: 16),
+          Text(
             'No bookings yet',
             style: TextStyle(
               fontFamily: 'Syne',
@@ -104,8 +104,8 @@ class _EmptyBookings extends StatelessWidget {
               color: AppTheme.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Browse services and build your first package',
             style: TextStyle(
               fontFamily: 'DMSans',

@@ -216,8 +216,9 @@ class _AdminAddAddonScreenState extends ConsumerState<AdminAddAddonScreen> {
                         prefixIcon: Icons.attach_money_rounded,
                         validator: (v) {
                           if (v == null || v.isEmpty) return 'Required';
-                          if (double.tryParse(v) == null)
+                          if (double.tryParse(v) == null) {
                             return 'Invalid number';
+                          }
                           return null;
                         },
                       ),
