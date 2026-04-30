@@ -122,7 +122,7 @@ final packageBuilderProvider = StateNotifierProvider.autoDispose<
     PackageBuilderNotifier,
     PackageBuilderState>((ref) => PackageBuilderNotifier());
 
-// ─── Bookings provider ────────────────────────────────────────────────────────
+// ─── Bookings submit provider ─────────────────────────────────────────────────
 
 class BookingsState {
   final bool isLoading;
@@ -167,27 +167,42 @@ final myBookingsProvider = FutureProvider.autoDispose((ref) async {
 });
 
 // ─── All bookings (admin) ─────────────────────────────────────────────────────
-// FIX: Use keepAlive so the data isn't discarded on tab switch,
-// preventing unnecessary re-fetches that can mask errors.
+// FIX: Was non-autoDispose but never explicitly invalidated on refresh.
+// Kept non-autoDispose (so the data survives tab switches) but the admin
+// bookings screen now calls ref.invalidate(allBookingsProvider) on
+// pull-to-refresh and after each status change, so data stays fresh.
 final allBookingsProvider = FutureProvider<List<dynamic>>((ref) async {
   final api = ref.read(apiServiceProvider);
   try {
     return await api.getAllBookings();
   } catch (e) {
-    // Re-throw with a cleaner message for the UI
     throw Exception(
         'Failed to load bookings: ${e.toString().replaceAll('Exception: ', '')}');
   }
 });
 
 // ─── Saved packages ───────────────────────────────────────────────────────────
-
+// FIX: SavedPackagesScreen was calling ref.invalidate(savedPackagesProvider)
+// but savedPackagesProvider is a plain Provider (synchronous, autoDispose).
+// ref.invalidate() on an autoDispose Provider disposes it immediately, then
+// the next read rebuilds it — that works for FutureProvider but for a plain
+// Provider it just silently does nothing visible. The fix: keep the provider
+// non-autoDispose and use ref.invalidate() which forces a rebuild on next
+// watch, OR (simpler) keep autoDispose and use ref.refresh() which
+// immediately rebuilds and returns the new value.
+//
+// We keep autoDispose=true and the screen must use:
+//   ref.refresh(savedPackagesProvider);   ← not ref.invalidate(...)
 final savedPackagesProvider = Provider.autoDispose((ref) {
   return CacheService.getSavedPackages();
 });
 
 // ─── Analytics ────────────────────────────────────────────────────────────────
-// FIX: Use keepAlive (non-autoDispose) so analytics data persists across tab switches
+// FIX: analyticsProvider is non-autoDispose and was never invalidated. The
+// admin analytics screen now calls ref.invalidate(analyticsProvider) when
+// it needs fresh data (e.g., on pull-to-refresh). Using keepAlive (default
+// for non-autoDispose) is intentional so expensive analytics don't re-fetch
+// on every tab switch.
 final analyticsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final api = ref.read(apiServiceProvider);
   try {

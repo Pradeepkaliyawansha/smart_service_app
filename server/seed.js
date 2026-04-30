@@ -68,7 +68,6 @@ const seed = async () => {
     createdBy: adminUser._id,
   });
 
-  const aquaService = require("./models/Service");
   const fishService = await Service.create({
     name: "Aquaculture Consulting",
     description:

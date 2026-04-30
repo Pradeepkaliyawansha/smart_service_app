@@ -59,10 +59,14 @@ class SavedPackagesScreen extends ConsumerWidget {
                             package: packages[i],
                             onDelete: () async {
                               await CacheService.deletePackage(packages[i].id);
-                              ref.invalidate(savedPackagesProvider);
+                              // FIX: Was ref.invalidate(savedPackagesProvider).
+                              // savedPackagesProvider is autoDispose, so
+                              // ref.invalidate() would silently no-op on a plain
+                              // Provider. ref.refresh() forces an immediate
+                              // synchronous rebuild and returns the new value.
+                              ref.refresh(savedPackagesProvider);
                             },
                             onUse: () {
-                              // Navigate to service and pre-fill
                               context.push(
                                 '/package-builder/${packages[i].serviceId}',
                               );
@@ -257,9 +261,8 @@ class _SavedPackageCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isAccent
-            ? AppTheme.success.withOpacity(0.15)
-            : AppTheme.background,
+        color:
+            isAccent ? AppTheme.success.withOpacity(0.15) : AppTheme.background,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
